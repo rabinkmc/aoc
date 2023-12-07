@@ -16,11 +16,19 @@ ONE_PAIR = 1
 HIGH_CARD = 0
 
 
-def get_score(hand):
+def strength(hand_bet):
+    hand, _ = hand_bet
     jcard = hand
+    hand = (
+        hand.replace("T", chr(ord("9") + 1))
+        .replace("J", chr(ord("2") - 1))
+        .replace("Q", chr(ord("9") + 3))
+        .replace("K", chr(ord("9") + 4))
+        .replace("A", chr(ord("9") + 5))
+    )
     j_count = list(jcard).count("J")
     if j_count == 5:
-        return FIVE_KIND
+        return FIVE_KIND, hand
 
     card = ""
     for c in jcard:
@@ -30,48 +38,25 @@ def get_score(hand):
     count = Counter(card)
     common_two = count.most_common(2)
     if len(common_two) == 1:
-        return FIVE_KIND
+        return FIVE_KIND, hand
     first = common_two[0][1]
     second = common_two[1][1]
     if first + j_count == 5:
-        return FIVE_KIND
+        return FIVE_KIND, hand
     if first + j_count == 4:
-        return FOUR_KIND
+        return FOUR_KIND, hand
     if first == 3 and second == 2 or (first == 2 and second == 2 and j_count == 1):
-        return FULL_HOUSE
+        return FULL_HOUSE, hand
     if first + j_count == 3:
-        return THREE_KIND
+        return THREE_KIND, hand
     if (first == 2 and second == 2) or (first == 2 and j_count == 1):
-        return TWO_PAIR
+        return TWO_PAIR, hand
     if first + j_count == 2:
-        return ONE_PAIR
-    return HIGH_CARD
+        return ONE_PAIR, hand
+    return HIGH_CARD, hand
 
 
-def compare_order(hand1, hand2):
-    face_cards = {"T": 10, "J": 1, "Q": 12, "K": 13, "A": 14}
-    for a, b in zip(hand1, hand2):
-        if a == b:
-            continue
-        val_c1 = face_cards.get(a) or int(a)
-        val_c2 = face_cards.get(b) or int(b)
-        return val_c1 > val_c2
-    return 0
-
-
-def compare(c1, c2):
-    s1 = get_score(c1[0])
-    s2 = get_score(c2[0])
-    if s1 == s2:
-        return compare_order(c1[0], c2[0])
-    return s1 > s2
-
-
-for i in range(len(cards)):
-    for j in range(i + 1, len(cards)):
-        if compare(cards[i], cards[j]):
-            cards[j], cards[i] = cards[i], cards[j]
-
+cards = sorted(cards, key=strength)
 sum = 0
 for rank, card in enumerate(cards, 1):
     bet = card[1]
