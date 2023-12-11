@@ -1,5 +1,3 @@
-from collections import deque
-
 graph = open("day11.txt").read().strip("\n").split("\n")
 w = len(graph[0])
 h = len(graph)
@@ -7,7 +5,9 @@ f = open(1, "w")
 rr = 0
 
 
-def build_graph(graph):
+def empty_space(graph):
+    empty_rows = []
+    empty_cols = []
     w = len(graph[0])
     h = len(graph)
     rr = 0
@@ -16,8 +16,7 @@ def build_graph(graph):
             if graph[rr][cc] == "#":
                 break
         else:
-            graph.insert(rr, graph[rr])
-            rr += 1
+            empty_rows.append(rr)
         rr += 1
 
     cc = 0
@@ -27,10 +26,10 @@ def build_graph(graph):
             if graph[rr][cc] == "#":
                 break
         else:
-            for rr in range(h):
-                graph[rr] = graph[rr][0:cc] + "." + graph[rr][cc:]
-            cc += 1
+            empty_cols.append(cc)
         cc += 1
+
+    return empty_rows, empty_cols
 
 
 def find_galaxies(graph):
@@ -45,11 +44,12 @@ def find_galaxies(graph):
     return positions
 
 
-build_graph(graph)
+# build_graph(graph)
 w = len(graph[0])
 h = len(graph)
 
 locations = find_galaxies(graph)
+empty_rows, empty_cols = empty_space(graph)
 
 
 def pgraph(graph):
@@ -64,7 +64,20 @@ def pgraph(graph):
 def dist(start, end):
     r1, c1 = start
     r2, c2 = end
-    return abs(r1 - r2) + abs(c1 - c2)
+    erows = 0
+    ecols = 0
+    c1, c2 = min(c1, c2), max(c1, c2)
+    for row in empty_rows:
+        if r1 < row < r2:
+            erows += 1
+    for col in empty_cols:
+        if c1 <= col <= c2:
+            ecols += 1
+
+    r2 += (1000000 * erows - erows) if erows else 0
+    c2 += (1000000 * ecols - ecols) if ecols else 0
+    ans = abs(r2 - r1) + abs(c2 - c1)
+    return ans
 
 
 def sum_of_locations(locations=locations):
